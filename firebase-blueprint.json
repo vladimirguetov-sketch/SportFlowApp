@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Informações do usuário do sistema",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["organizer", "participant"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Evento esportivo criado por um organizador",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "registrationStartDate": { "type": "string", "format": "date-time" },
+        "registrationEndDate": { "type": "string", "format": "date-time" },
+        "location": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "organizerId": { "type": "string" },
+        "pixKey": { "type": "string" },
+        "price": { "type": "number" },
+        "registrationFields": { "type": "array" },
+        "sponsors": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "startDate", "endDate", "registrationStartDate", "registrationEndDate", "organizerId", "pixKey"]
+    },
+    "Registration": {
+      "title": "Registration",
+      "description": "Inscrição de um participante em um evento",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "eventId": { "type": "string" },
+        "participantId": { "type": "string" },
+        "organizerId": { "type": "string" },
+        "participantData": { "type": "object" },
+        "paymentProofUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventId", "participantId", "organizerId", "participantData", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Perfis de usuários"
+    },
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Lista de eventos esportivos"
+    },
+    "/registrations/{registrationId}": {
+      "schema": "Registration",
+      "description": "Inscrições dos participantes"
+    }
+  }
+}
