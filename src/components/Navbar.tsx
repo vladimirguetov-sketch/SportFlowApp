@@ -1,34 +1,17 @@
 import { Link } from 'react-router-dom';
-import { auth, googleProvider } from '../firebase';
-import { signInWithPopup, signOut } from 'firebase/auth';
-import { Button } from './ui/button';
-import { Trophy, LogIn, LogOut, PlusCircle, LayoutDashboard, User } from 'lucide-react';
+import { auth } from '../firebase';
+import { signOut } from 'firebase/auth';
+import { Trophy, LogIn, LogOut, PlusCircle, LayoutDashboard } from 'lucide-react';
 import { UserProfile } from '../types';
-import { toast } from 'sonner';
+import { useState } from 'react';
+import { AuthModal } from './AuthModal';
 
 interface NavbarProps {
   profile: UserProfile | null;
 }
 
 export function Navbar({ profile }: NavbarProps) {
-  const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-      toast.success('Bem-vindo de volta!');
-    } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-        // Silent fail - user just closed the window
-        console.log('Login cancelado pelo usuário');
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        // Multiple clicks
-        console.log('Requisição de popup cancelada');
-      } else {
-        console.error('Erro ao fazer login:', error);
-        toast.error('Erro ao fazer login. Tente novamente.');
-      }
-    }
-  };
-
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const handleLogout = () => signOut(auth);
 
   return (
@@ -47,37 +30,41 @@ export function Navbar({ profile }: NavbarProps) {
           <div className="flex items-center gap-4">
             {profile ? (
               <>
-                <Link to="/create-event">
-                  <Button variant="ghost" className="hidden sm:flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50">
-                    <PlusCircle className="w-4 h-4" />
-                    Criar Evento
-                  </Button>
+                <Link to="/create-event" className="hidden sm:flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-3 py-2 rounded-lg transition-colors font-medium text-sm">
+                  <PlusCircle className="w-4 h-4" />
+                  Criar Evento
                 </Link>
-                <Link to="/dashboard">
-                  <Button variant="ghost" className="flex items-center gap-2">
-                    <LayoutDashboard className="w-4 h-4" />
-                    <span className="hidden sm:inline">Painel</span>
-                  </Button>
+                <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm">
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden sm:inline">Painel</span>
                 </Link>
                 <div className="flex items-center gap-2 ml-2 border-l pl-4">
                   <div className="text-right hidden sm:block">
                     <p className="text-sm font-medium leading-none">{profile.name}</p>
                     <p className="text-xs text-muted-foreground">{profile.email}</p>
                   </div>
-                  <Button variant="outline" size="icon" onClick={handleLogout} title="Sair">
+                  <button 
+                    onClick={handleLogout} 
+                    title="Sair"
+                    className="p-2 border rounded-lg hover:bg-gray-50 transition-colors"
+                  >
                     <LogOut className="w-4 h-4" />
-                  </Button>
+                  </button>
                 </div>
               </>
             ) : (
-              <Button onClick={handleLogin} className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2">
+              <button 
+                onClick={() => setIsAuthModalOpen(true)} 
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-bold transition-all shadow-md shadow-orange-200"
+              >
                 <LogIn className="w-4 h-4" />
-                Entrar com Google
-              </Button>
+                Entrar
+              </button>
             )}
           </div>
         </div>
       </div>
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </nav>
   );
 }
