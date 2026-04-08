@@ -6,10 +6,11 @@ import {
   createUserWithEmailAndPassword,
   RecaptchaVerifier,
   signInWithPhoneNumber,
-  ConfirmationResult
+  ConfirmationResult,
+  browserPopupRedirectResolver
 } from 'firebase/auth';
 import { toast } from 'sonner';
-import { Mail, Phone, Chrome, Loader2, X } from 'lucide-react';
+import { Mail, Phone, Chrome, Loader2, X, ArrowRight, Trophy } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -36,12 +37,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
-      toast.success('Bem-vindo!');
+      // Using browserPopupRedirectResolver is critical for iframe environments like AI Studio
+      await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
+      toast.success('Bem-vindo ao SportFlow!');
       onClose();
     } catch (error: any) {
-      if (error.code !== 'auth/popup-closed-by-user') {
-        toast.error('Erro ao entrar com Google');
+      console.error("Google Login Error:", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error('Login cancelado pelo usuário.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        toast.error('Domínio não autorizado. Adicione este domínio no Console do Firebase.');
+      } else if (error.code === 'auth/popup-blocked') {
+        toast.error('O popup de login foi bloqueado pelo seu navegador.');
+      } else {
+        toast.error(`Erro ao entrar com Google: ${error.message}`);
       }
     } finally {
       setLoading(false);
@@ -54,14 +63,21 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     try {
       if (authMode === 'login') {
         await signInWithEmailAndPassword(auth, email, password);
-        toast.success('Bem-vindo de volta!');
+        toast.success('Que bom ver você de novo!');
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
-        toast.success('Conta criada com sucesso!');
+        toast.success('Conta criada com sucesso! Bem-vindo!');
       }
       onClose();
     } catch (error: any) {
-      toast.error(error.message || 'Erro na autenticação');
+      console.error("Email Auth Error:", error);
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('Este email já está em uso.');
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        toast.error('Email ou senha incorretos.');
+      } else {
+        toast.error(error.message || 'Erro na autenticação');
+      }
     } finally {
       setLoading(false);
     }
@@ -84,9 +100,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const result = await signInWithPhoneNumber(auth, phoneNumber, verifier);
       setConfirmationResult(result);
       setShowOtp(true);
-      toast.success('Código enviado!');
+      toast.success('Código enviado por SMS!');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao enviar código');
+      console.error("Phone Auth Error:", error);
+      toast.error('Erro ao enviar código. Verifique o número.');
     } finally {
       setLoading(false);
     }
@@ -98,156 +115,156 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoading(true);
     try {
       await confirmationResult.confirm(verificationCode);
-      toast.success('Bem-vindo!');
+      toast.success('Autenticado com sucesso!');
       onClose();
     } catch (error: any) {
-      toast.error('Código inválido');
+      console.error("OTP Verification Error:", error);
+      toast.error('Código inválido ou expirado.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Ultra-clean backdrop */}
+      <div 
+        className="absolute inset-0 bg-white/60 backdrop-blur-sm transition-opacity duration-500" 
+        onClick={onClose}
+      />
+      
+      {/* Modal Content - Minimalist Floating Card */}
+      <div className="relative bg-white w-full max-w-[300px] rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100 animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-500 ease-out">
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-black/5 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 p-1.5 hover:bg-gray-50 rounded-full transition-colors z-20 text-gray-300 hover:text-gray-500"
         >
-          <X className="w-5 h-5 text-gray-500" />
+          <X className="w-4 h-4" />
         </button>
 
-        <div className="bg-orange-600 p-8 text-white text-center space-y-2">
-          <h2 className="text-3xl font-black">SportFlow</h2>
-          <p className="text-orange-100 opacity-90">
-            {authMode === 'login' ? 'Entre na sua conta' : 'Crie sua conta gratuita'}
-          </p>
-        </div>
+        <div className="p-6 pt-10 space-y-6">
+          {/* Simple Header */}
+          <div className="text-center space-y-1">
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">SportFlow</h2>
+            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider">
+              {authMode === 'login' ? 'Entrar' : 'Criar Conta'}
+            </p>
+          </div>
 
-        <div className="p-8 space-y-6">
-          <div className="flex p-1 bg-gray-100 rounded-xl">
+          {/* Minimal Tabs */}
+          <div className="flex justify-center border-b border-gray-50">
             {(['google', 'email', 'phone'] as const).map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 pb-2 text-[10px] font-bold uppercase tracking-widest transition-all relative ${
                   activeTab === tab 
-                    ? 'bg-white text-orange-600 shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-orange-600' 
+                    : 'text-gray-300 hover:text-gray-400'
                 }`}
               >
-                {tab === 'google' && <Chrome className="w-4 h-4" />}
-                {tab === 'email' && <Mail className="w-4 h-4" />}
-                {tab === 'phone' && <Phone className="w-4 h-4" />}
-                <span className="capitalize">{tab === 'google' ? 'Google' : tab}</span>
+                {tab === 'google' ? 'Google' : tab === 'email' ? 'Email' : 'Fone'}
+                {activeTab === tab && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500 rounded-full" />
+                )}
               </button>
             ))}
           </div>
 
-          {activeTab === 'google' && (
-            <div className="space-y-4 py-4">
-              <button 
-                onClick={handleGoogleLogin} 
-                className="w-full h-12 bg-white text-gray-700 border rounded-lg hover:bg-gray-50 flex items-center justify-center gap-3 font-bold shadow-sm transition-colors disabled:opacity-50"
-                disabled={loading}
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Chrome className="w-5 h-5 text-blue-500" />}
-                Continuar com Google
-              </button>
-              <p className="text-center text-xs text-muted-foreground">
-                A maneira mais rápida e segura de entrar.
-              </p>
-            </div>
-          )}
+          {/* Compact Content */}
+          <div className="min-h-[140px] flex flex-col justify-center">
+            {activeTab === 'google' && (
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <button 
+                  onClick={handleGoogleLogin} 
+                  className="w-full h-10 bg-white text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-2 text-xs font-bold transition-all active:scale-[0.98] disabled:opacity-50"
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Chrome className="w-4 h-4 text-blue-500" />}
+                  Google
+                </button>
+              </div>
+            )}
 
-          {activeTab === 'email' && (
-            <form onSubmit={handleEmailAuth} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block" htmlFor="email">Email</label>
+            {activeTab === 'email' && (
+              <form onSubmit={handleEmailAuth} className="space-y-3 animate-in fade-in duration-300">
                 <input 
-                  id="email" 
                   type="email" 
-                  placeholder="seu@email.com" 
-                  className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
+                  placeholder="Email" 
+                  className="w-full h-10 px-4 rounded-xl border border-gray-100 focus:border-orange-500 focus:ring-0 outline-none transition-all bg-gray-50/50 text-xs"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required 
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block" htmlFor="password">Senha</label>
                 <input 
-                  id="password" 
                   type="password" 
-                  placeholder="••••••••" 
-                  className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
+                  placeholder="Senha" 
+                  className="w-full h-10 px-4 rounded-xl border border-gray-100 focus:border-orange-500 focus:ring-0 outline-none transition-all bg-gray-50/50 text-xs"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required 
                 />
-              </div>
-              <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 h-12 rounded-lg font-bold text-white shadow-lg shadow-orange-200 transition-all disabled:opacity-50" disabled={loading}>
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (authMode === 'login' ? 'Entrar' : 'Criar Conta')}
-              </button>
-            </form>
-          )}
+                <button 
+                  type="submit" 
+                  className="w-full bg-orange-500 hover:bg-orange-600 h-10 rounded-xl font-bold text-white text-xs transition-all active:scale-[0.98] disabled:opacity-50" 
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (authMode === 'login' ? 'Entrar' : 'Cadastrar')}
+                </button>
+              </form>
+            )}
 
-          {activeTab === 'phone' && (
-            <div className="space-y-4">
-              {!showOtp ? (
-                <form onSubmit={handleSendOtp} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block" htmlFor="phone">Telefone (com DDD)</label>
+            {activeTab === 'phone' && (
+              <div className="space-y-3 animate-in fade-in duration-300">
+                {!showOtp ? (
+                  <form onSubmit={handleSendOtp} className="space-y-3">
                     <input 
-                      id="phone" 
                       type="tel" 
-                      placeholder="+55 11 99999-9999" 
-                      className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
+                      placeholder="Telefone" 
+                      className="w-full h-10 px-4 rounded-xl border border-gray-100 focus:border-orange-500 focus:ring-0 outline-none transition-all bg-gray-50/50 text-xs"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       required 
                     />
-                  </div>
-                  <div id="recaptcha-container"></div>
-                  <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 h-12 rounded-lg font-bold text-white shadow-lg shadow-orange-200 transition-all disabled:opacity-50" disabled={loading}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enviar Código SMS'}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block" htmlFor="otp">Código de Verificação</label>
+                    <div id="recaptcha-container"></div>
+                    <button 
+                      type="submit" 
+                      className="w-full bg-orange-500 hover:bg-orange-600 h-10 rounded-xl font-bold text-white text-xs transition-all active:scale-[0.98] disabled:opacity-50" 
+                      disabled={loading}
+                    >
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enviar SMS'}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} className="space-y-3">
                     <input 
-                      id="otp" 
-                      placeholder="123456" 
-                      className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all"
+                      placeholder="Código" 
+                      className="w-full h-10 px-4 rounded-xl border border-gray-100 focus:border-orange-500 focus:ring-0 outline-none transition-all bg-gray-50/50 text-center text-sm font-bold tracking-widest"
                       value={verificationCode}
                       onChange={(e) => setVerificationCode(e.target.value)}
                       required 
                     />
-                  </div>
-                  <button type="submit" className="w-full bg-orange-600 hover:bg-orange-700 h-12 rounded-lg font-bold text-white shadow-lg shadow-orange-200 transition-all disabled:opacity-50" disabled={loading}>
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verificar Código'}
-                  </button>
-                  <button 
-                    type="button" 
-                    className="w-full text-xs text-gray-500 hover:text-orange-600 transition-colors" 
-                    onClick={() => setShowOtp(false)}
-                  >
-                    Mudar número
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
+                    <button 
+                      type="submit" 
+                      className="w-full bg-orange-500 hover:bg-orange-600 h-10 rounded-xl font-bold text-white text-xs transition-all active:scale-[0.98] disabled:opacity-50" 
+                      disabled={loading}
+                    >
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verificar'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
 
-          <div className="text-center pt-4 border-t">
+          {/* Minimal Footer */}
+          <div className="text-center">
             <button 
               onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-              className="text-sm text-orange-600 hover:text-orange-700 font-bold transition-colors"
+              className="text-[10px] text-gray-400 hover:text-orange-500 font-bold transition-all uppercase tracking-widest"
             >
-              {authMode === 'login' ? 'Não tem conta? Crie uma agora' : 'Já tem conta? Faça login'}
+              {authMode === 'login' ? 'Criar nova conta' : 'Já tenho conta'}
             </button>
           </div>
         </div>

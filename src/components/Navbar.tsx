@@ -30,11 +30,11 @@ export function Navbar({ profile }: NavbarProps) {
           <div className="flex items-center gap-4">
             {profile ? (
               <>
-                <Link to="/create-event" className="hidden sm:flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-3 py-2 rounded-lg transition-colors font-medium text-sm">
+                <Link to="/create-event" className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl transition-all font-bold text-sm shadow-lg shadow-orange-200 active:scale-[0.98]">
                   <PlusCircle className="w-4 h-4" />
-                  Criar Evento
+                  <span className="hidden xs:inline">Criar Evento</span>
                 </Link>
-                <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm">
+                <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors font-medium text-sm">
                   <LayoutDashboard className="w-4 h-4" />
                   <span className="hidden sm:inline">Painel</span>
                 </Link>
