@@ -4,13 +4,31 @@ import { signInWithPopup, signOut } from 'firebase/auth';
 import { Button } from './ui/button';
 import { Trophy, LogIn, LogOut, PlusCircle, LayoutDashboard, User } from 'lucide-react';
 import { UserProfile } from '../types';
+import { toast } from 'sonner';
 
 interface NavbarProps {
   profile: UserProfile | null;
 }
 
 export function Navbar({ profile }: NavbarProps) {
-  const handleLogin = () => signInWithPopup(auth, googleProvider);
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      toast.success('Bem-vindo de volta!');
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        // Silent fail - user just closed the window
+        console.log('Login cancelado pelo usuário');
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        // Multiple clicks
+        console.log('Requisição de popup cancelada');
+      } else {
+        console.error('Erro ao fazer login:', error);
+        toast.error('Erro ao fazer login. Tente novamente.');
+      }
+    }
+  };
+
   const handleLogout = () => signOut(auth);
 
   return (
