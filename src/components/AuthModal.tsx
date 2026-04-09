@@ -15,12 +15,20 @@ import { Mail, Phone, Chrome, Loader2, X, ArrowRight, Trophy } from 'lucide-reac
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialMode?: 'login' | 'signup';
 }
 
-export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>(initialMode);
   const [activeTab, setActiveTab] = useState<'google' | 'email' | 'phone'>('google');
+
+  // Sync authMode when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setAuthMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
   
   // Email/Password state
   const [email, setEmail] = useState('');
@@ -35,22 +43,34 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
   const handleGoogleLogin = async () => {
+    if (loading) return;
     setLoading(true);
     try {
-      // Using browserPopupRedirectResolver is critical for iframe environments like AI Studio
+      // Using browserPopupRedirectResolver is generally recommended for iframe environments
+      // but if it fails with 'popup-closed-by-user' unexpectedly, it might be a browser restriction.
       await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
       toast.success('Bem-vindo ao SportFlow!');
       onClose();
     } catch (error: any) {
       console.error("Google Login Error:", error);
+      
       if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Login cancelado pelo usuário.');
+        toast.error('O login foi cancelado. Certifique-se de completar o processo na janela que abriu.', {
+          description: 'Se a janela fechou sozinha, verifique se o seu navegador está bloqueando popups.',
+          duration: 5000,
+        });
       } else if (error.code === 'auth/unauthorized-domain') {
-        toast.error('Domínio não autorizado. Adicione este domínio no Console do Firebase.');
+        toast.error('Domínio não autorizado.', {
+          description: 'Este domínio precisa ser adicionado à lista de domínios autorizados no Console do Firebase (Autenticação > Configurações).',
+          duration: 6000,
+        });
       } else if (error.code === 'auth/popup-blocked') {
-        toast.error('O popup de login foi bloqueado pelo seu navegador.');
+        toast.error('Popup bloqueado!', {
+          description: 'Por favor, permita popups para este site para conseguir entrar com o Google.',
+          duration: 5000,
+        });
       } else {
-        toast.error(`Erro ao entrar com Google: ${error.message}`);
+        toast.error(`Erro na autenticação: ${error.message}`);
       }
     } finally {
       setLoading(false);

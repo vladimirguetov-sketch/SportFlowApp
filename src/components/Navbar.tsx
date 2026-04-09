@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import { Trophy, LogIn, LogOut, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { Trophy, UserPlus, LogOut, PlusCircle, LayoutDashboard } from 'lucide-react';
 import { UserProfile } from '../types';
 import { useState } from 'react';
 import { AuthModal } from './AuthModal';
@@ -57,14 +57,14 @@ export function Navbar({ profile }: NavbarProps) {
                 onClick={() => setIsAuthModalOpen(true)} 
                 className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-bold transition-all shadow-md shadow-orange-200"
               >
-                <LogIn className="w-4 h-4" />
-                Entrar
+                <UserPlus className="w-4 h-4" />
+                Criar Conta
               </button>
             )}
           </div>
         </div>
       </div>
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialMode="signup" />
     </nav>
   );
 }
