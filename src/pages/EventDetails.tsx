@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
-import { Calendar, MapPin, Wallet, Info, CheckCircle2, QrCode, Building2 } from 'lucide-react';
+import { Calendar, MapPin, Wallet, Info, CheckCircle2, QrCode, Building2, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
+import { EventAssistant } from '../components/EventAssistant';
 
 export function EventDetails() {
   const { id } = useParams();
@@ -249,15 +250,42 @@ export function EventDetails() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="proof">Anexar Comprovante (URL ou Link)</Label>
-                      <Input 
-                        id="proof" 
-                        required 
-                        placeholder="Cole o link do comprovante ou imagem"
-                        value={paymentProofUrl}
-                        onChange={(e) => setPaymentProofUrl(e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground italic">
+                      <Label htmlFor="proof">Anexar Comprovante (Imagem ou PDF)</Label>
+                      <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative group" onClick={() => document.getElementById('proof-upload')?.click()}>
+                        {paymentProofUrl ? (
+                          <div className="text-center space-y-2">
+                            <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
+                            <p className="text-sm font-medium text-green-700">Comprovante anexado com sucesso!</p>
+                            <Button type="button" variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setPaymentProofUrl(''); }} className="text-red-500 hover:text-red-700">Remover</Button>
+                          </div>
+                        ) : (
+                          <div className="text-center space-y-2">
+                            <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+                            <p className="text-sm font-medium">Clique para anexar o comprovante do PIX</p>
+                            <p className="text-xs text-muted-foreground">Formatos suportados: JPG, PNG, PDF (Máx 2MB)</p>
+                          </div>
+                        )}
+                        <input 
+                          id="proof-upload" 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*,application/pdf" 
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 2000000) {
+                              toast.error("O arquivo é muito grande. Use um arquivo menor que 2MB.");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setPaymentProofUrl(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }} 
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground italic mt-2">
                         * O organizador validará sua inscrição após conferir o comprovante.
                       </p>
                     </div>
@@ -327,6 +355,12 @@ export function EventDetails() {
           </Card>
         </div>
       </div>
+      
+      <EventAssistant 
+        eventName={event.title} 
+        eventLocation={event.location} 
+        eventDescription={event.description} 
+      />
     </div>
   );
 }

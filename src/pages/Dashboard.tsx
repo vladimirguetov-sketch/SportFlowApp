@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Trophy, Users, CheckCircle, XCircle, Clock, ExternalLink } from 'lucide-react';
+import { Trophy, Users, CheckCircle, XCircle, Clock, ExternalLink, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 
 export function Dashboard() {
   const [myEvents, setMyEvents] = useState<Event[]>([]);
@@ -145,9 +146,25 @@ export function Dashboard() {
                           </TableCell>
                           <TableCell>
                             {reg.paymentProofUrl ? (
-                              <a href={reg.paymentProofUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline text-xs">
-                                <ExternalLink className="w-3 h-3" /> Ver Comprovante
-                              </a>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                                    <Eye className="w-4 h-4" /> Ver Comprovante
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle>Comprovante de Pagamento</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="flex justify-center p-4">
+                                    {reg.paymentProofUrl.startsWith('data:application/pdf') ? (
+                                      <iframe src={reg.paymentProofUrl} className="w-full h-[600px]" title="Comprovante PDF" />
+                                    ) : (
+                                      <img src={reg.paymentProofUrl} alt="Comprovante" className="max-w-full h-auto rounded-lg" />
+                                    )}
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
                             ) : (
                               <span className="text-xs text-muted-foreground italic">Sem comprovante</span>
                             )}
