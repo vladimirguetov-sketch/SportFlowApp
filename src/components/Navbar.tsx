@@ -1,17 +1,16 @@
 import { Link } from 'react-router-dom';
-import { auth } from '../firebase';
-import { signOut } from 'firebase/auth';
-import { Trophy, UserPlus, LogOut, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { auth, googleProvider } from '../firebase';
+import { signInWithPopup, signOut } from 'firebase/auth';
+import { Button } from './ui/button';
+import { Trophy, LogIn, LogOut, PlusCircle, LayoutDashboard, User } from 'lucide-react';
 import { UserProfile } from '../types';
-import { useState } from 'react';
-import { AuthModal } from './AuthModal';
 
 interface NavbarProps {
   profile: UserProfile | null;
 }
 
 export function Navbar({ profile }: NavbarProps) {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const handleLogin = () => signInWithPopup(auth, googleProvider);
   const handleLogout = () => signOut(auth);
 
   return (
@@ -30,41 +29,37 @@ export function Navbar({ profile }: NavbarProps) {
           <div className="flex items-center gap-4">
             {profile ? (
               <>
-                <Link to="/create-event" className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl transition-all font-bold text-sm shadow-lg shadow-orange-200 active:scale-[0.98]">
-                  <PlusCircle className="w-4 h-4" />
-                  <span className="hidden xs:inline">Criar Evento</span>
+                <Link to="/create-event">
+                  <Button variant="ghost" className="hidden sm:flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50">
+                    <PlusCircle className="w-4 h-4" />
+                    Criar Evento
+                  </Button>
                 </Link>
-                <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors font-medium text-sm">
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">Painel</span>
+                <Link to="/dashboard">
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span className="hidden sm:inline">Painel</span>
+                  </Button>
                 </Link>
                 <div className="flex items-center gap-2 ml-2 border-l pl-4">
                   <div className="text-right hidden sm:block">
                     <p className="text-sm font-medium leading-none">{profile.name}</p>
                     <p className="text-xs text-muted-foreground">{profile.email}</p>
                   </div>
-                  <button 
-                    onClick={handleLogout} 
-                    title="Sair"
-                    className="p-2 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
+                  <Button variant="outline" size="icon" onClick={handleLogout} title="Sair">
                     <LogOut className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </>
             ) : (
-              <button 
-                onClick={() => setIsAuthModalOpen(true)} 
-                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-bold transition-all shadow-md shadow-orange-200"
-              >
-                <UserPlus className="w-4 h-4" />
-                Criar Conta
-              </button>
+              <Button onClick={handleLogin} className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2">
+                <LogIn className="w-4 h-4" />
+                Entrar com Google
+              </Button>
             )}
           </div>
         </div>
       </div>
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialMode="signup" />
     </nav>
   );
 }

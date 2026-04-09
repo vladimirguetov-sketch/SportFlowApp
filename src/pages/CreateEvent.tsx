@@ -129,31 +129,23 @@ export function CreateEvent() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-10 px-4 relative">
-      {/* Subtle background blur/overlay for the floating effect */}
-      <div className="absolute inset-0 bg-gray-50/50 backdrop-blur-[2px] z-0" />
-      
-      <div className="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-8 duration-500 relative z-10">
-        <div className="p-8 sm:p-12 space-y-8">
-          <div className="flex items-center gap-4 border-b pb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full hover:bg-gray-100">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-gray-900">Criar Novo Evento</h1>
-              <p className="text-muted-foreground font-medium">Preencha os detalhes para publicar seu evento esportivo.</p>
-            </div>
-          </div>
+    <div className="max-w-4xl mx-auto py-10 space-y-8">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <h1 className="text-3xl font-bold">Criar Novo Evento</h1>
+      </div>
 
-          <Tabs defaultValue="basic" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-3 bg-gray-50 p-1.5 rounded-2xl h-14">
-              <TabsTrigger value="basic" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm">Informações</TabsTrigger>
-              <TabsTrigger value="form" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm">Formulário</TabsTrigger>
-              <TabsTrigger value="sponsors" className="rounded-xl font-bold data-[state=active]:bg-white data-[state=active]:text-orange-600 data-[state=active]:shadow-sm">Patrocinadores</TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="basic" className="space-y-8">
+        <TabsList className="grid w-full grid-cols-3 bg-white border h-12">
+          <TabsTrigger value="basic" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">Informações</TabsTrigger>
+          <TabsTrigger value="form" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">Formulário</TabsTrigger>
+          <TabsTrigger value="sponsors" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">Patrocinadores</TabsTrigger>
+        </TabsList>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <TabsContent value="basic" className="space-y-8 animate-in fade-in duration-300">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <TabsContent value="basic" className="space-y-8">
             <Card>
               <CardHeader>
                 <CardTitle>Informações Básicas</CardTitle>
@@ -248,7 +240,7 @@ export function CreateEvent() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="form" className="space-y-8 animate-in fade-in duration-300">
+          <TabsContent value="form" className="space-y-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
@@ -342,7 +334,7 @@ export function CreateEvent() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="sponsors" className="space-y-8 animate-in fade-in duration-300">
+          <TabsContent value="sponsors" className="space-y-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
@@ -395,8 +387,6 @@ export function CreateEvent() {
           </div>
         </form>
       </Tabs>
-        </div>
-      </div>
     </div>
   );
 }
